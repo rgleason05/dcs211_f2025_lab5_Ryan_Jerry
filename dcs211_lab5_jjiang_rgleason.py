@@ -191,18 +191,31 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 20) -> int:
 
     Returns: int - The value of k that achieved the highest accuracy.
     """
+
+    seeds = [8675309, 5551212, 12121]  # required + custom seed
     best_k = 1
     best_acc = 0.0
 
     for k in range(1, max_k + 1):
-        knn = KNeighborsClassifier(n_neighbors=k)
-        knn.fit(X_train, y_train)
-        acc = knn.score(X_train, y_train)
+        acc_sum = 0.0
 
-        if acc > best_acc:
-            best_acc = acc
+        for seed in seeds:
+            X_subtrain, X_val, y_subtrain, y_val = train_test_split(
+                X_train, y_train, test_size=0.2, random_state=seed
+            )
+
+            knn = KNeighborsClassifier(n_neighbors=k)
+            knn.fit(X_subtrain, y_subtrain)
+            acc = knn.score(X_val, y_val)
+            acc_sum += acc
+
+        avg_acc = acc_sum / len(seeds)
+
+        if avg_acc > best_acc:
+            best_acc = avg_acc
             best_k = k
 
+    print(f"[findBestK] Best k = {best_k} with average validation accuracy = {best_acc:.4f}")
     return best_k
 
 def trainAndTest( X_train: np.ndarray,  y_train: np.ndarray,X_test: np.ndarray,y_test: np.ndarray, best_k: int) -> np.ndarray:
@@ -290,9 +303,8 @@ def main():
         drawDigitHeatmap(pixels_8x8)
 
 
-    # -------------------------------
     # scikit-learn-assisted portion
-    # -------------------------------
+
     print("\n[INFO] Starting scikit-learn-assisted tests...")
 
     # Step 7: Split data
@@ -304,15 +316,22 @@ def main():
     knn_guess = KNeighborsClassifier(n_neighbors=guessed_k)
     knn_guess.fit(X_train_sk, y_train_sk)
     preds_guess = knn_guess.predict(X_test_sk)
+
+    print("[COMPARE LABELS] Guessed k-NN (k=3):")
     compareLabels(preds_guess, y_test_sk)
 
     # Step 9: Find best k
-    print("\n[STEP 9] Determining best k")
+    print("\n[STEP 9] Determining best k...")
     best_k = findBestK(X_train_sk, y_train_sk)
+    print(f"Best determined k = {best_k}")
 
     # Step 10: Train and test using best k
-    print("\n[STEP 10] Training and testing with best k")
+    print("\n[STEP 10] Training and testing with best k...")
     final_preds = trainAndTest(X_train_sk, y_train_sk, X_test_sk, y_test_sk, best_k)
+
+    print("[COMPARE LABELS] Final model with best k:")
+    compareLabels(final_preds, y_test_sk)
+
 
 if __name__ == "__main__":
     main()
