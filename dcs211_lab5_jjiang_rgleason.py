@@ -56,7 +56,8 @@ def cleanTheData(df: pd.DataFrame) -> tuple[np.ndarray, pd.DataFrame]:
             A: numpy array, first 64 columns are pixel values, column 64 is the label
             df_clean: cleaned DataFrame
     '''
-    df_clean = df.select_dtypes(include=[np.number]).copy()
+    col65name = df.columns[65]
+    df_clean = df.drop(columns=[col65name]).copy()
     df_clean = df_clean.dropna().copy()
     df_clean = df_clean.astype(int)
     A = df_clean.values
