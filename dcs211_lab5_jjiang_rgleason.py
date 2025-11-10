@@ -317,15 +317,16 @@ def main():
     compareLabels(preds_guess, y_test_sk)
 
     # Step 9: Find best k
-    print("\n[STEP 9] Determining best k...")
-    best_k_per_seed = findBestK(X_train, y_train, max_k=64)
- 
-    print("\nSummary of best k per seed:")
-    for seed, k in best_k_per_seed.items():
+print("\n[STEP 9] Determining best k...")
+best_k_per_seed = findBestK(X_train, y_train, max_k=64)
+
+print("\nSummary of best k per seed:")
+for seed, k in best_k_per_seed.items():
     print(f"Seed {seed}: Best k = {k}")
 
-    final_k = max(set(best_k_per_seed.values()), key=list(best_k_per_seed.values()).count)
-    print("Final chosen k for your model:", final_k)
+
+
+
     # Step 10: Train and test using best k
     print("\n[STEP 10] Training and testing with best k...")
     final_preds = trainAndTest(X_train_sk, y_train_sk, X_test_sk, y_test_sk, best_k)
