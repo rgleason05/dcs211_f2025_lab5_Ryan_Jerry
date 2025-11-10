@@ -214,12 +214,13 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 64) -> dict
 
     return best_k_per_seed
 
-def trainAndTest( X_train: np.ndarray,  y_train: np.ndarray,X_test: np.ndarray,y_test: np.ndarray, best_k: int) -> np.ndarray:
+def trainAndTest(X_train: np.ndarray, y_train: np.ndarray,
+                 X_test: np.ndarray, y_test: np.ndarray,
+                 best_k_per_seed: dict, seed: int = 8675309) -> np.ndarray:
     """
-    Trains and tests a k-NN classifier using the best determined k value.
+    Trains and tests a k-NN classifier using the best determined k value for a given seed.
 
     Parameters:
-
     X_train : np.ndarray
         Training feature data.
     y_train : np.ndarray
@@ -228,20 +229,28 @@ def trainAndTest( X_train: np.ndarray,  y_train: np.ndarray,X_test: np.ndarray,y
         Test feature data.
     y_test : np.ndarray
         Test labels.
-    best_k : int
-        Optimal k value determined from tuning.
+    best_k_per_seed : dict
+        Dictionary of best k values per seed, as returned by findBestK().
+    seed : int, optional
+        The seed to use to select the best k (default 8675309).
 
-    Returns:np.ndarray- Predicted labels for the test set.
+    Returns:
+    np.ndarray
+        Predicted labels for the test set.
     """
+    if seed not in best_k_per_seed:
+        raise ValueError(f"Seed {seed} not found in best_k_per_seed dictionary.")
+
+    best_k = best_k_per_seed[seed]
+
     model = KNeighborsClassifier(n_neighbors=best_k)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
     accuracy = accuracy_score(y_test, predictions)
 
-    print(f" Model trained and tested with k = {best_k}")
+    print(f"Model trained and tested with k = {best_k} (seed={seed})")
     print(f"Accuracy = {accuracy:.4f}")
 
-    
     return predictions
  
 def main():
@@ -304,7 +313,7 @@ def main():
     print("\n[INFO] Starting scikit-learn-assisted tests...")
 
     # Step 7: Split data
-    X_test, y_test, X_train, y_train = splitData(A)
+    X_test_sk, y_test_sk, X_train_sk, y_train_sk = splitData(A)
 
 
     # Step 8: Run guessed k-NN
@@ -329,12 +338,14 @@ def main():
 
 
     # Step 10: Train and test using best k
-    print("\n[STEP 10] Training and testing with best k...")
-    final_preds = trainAndTest(X_train_sk, y_train_sk, X_test_sk, y_test_sk, best_k)
+    print("\n[STEP 10] Training and testing with best k...") 
 
-    print("[COMPARE LABELS] Final model with best k:")
+    # Example: using seed 8675309
+    final_preds = trainAndTest(X_train_sk, y_train_sk, X_test_sk, y_test_sk,
+                           best_k_per_seed, seed=8675309)
+
+    print("[COMPARE LABELS] Final model with best k (seed 8675309):")
     compareLabels(final_preds, y_test_sk)
-
 
 if __name__ == "__main__":
     main()
