@@ -193,7 +193,7 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 20) -> int:
     """
     best_k = 1
     best_acc = 0.0
-    
+
     for k in range(1, max_k + 1):
         knn = KNeighborsClassifier(n_neighbors=k)
         knn.fit(X_train, y_train)
@@ -201,13 +201,16 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 20) -> int:
         if acc > best_acc:
             best_acc = acc
             best_k = k
-            
+
     return best_k
 
-# Example usage for multiple seeds
 seeds = [8675309, 5551212, 12345]
+
 for seed in seeds:
     np.random.seed(seed)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=seed
+    )
     best_k = findBestK(X_train, y_train)
     print(f"Best k for seed {seed}: {best_k}")
 
