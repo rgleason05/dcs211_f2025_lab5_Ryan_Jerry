@@ -116,7 +116,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
 
 def runInitialKNN(X_train: np.ndarray, y_train: np.ndarray,
-                  X_test: np.ndarray, y_test: np.ndarray, k_guess: int = 3) -> None:
+                  X_test: np.ndarray, y_test: np.ndarray, k_guess: int = 5) -> None:
     """
     Trains and tests a k-NN classifier with an initial guessed k value.
 
@@ -126,8 +126,8 @@ def runInitialKNN(X_train: np.ndarray, y_train: np.ndarray,
         Training data and corresponding labels.
     X_test, y_test : np.ndarray
         Testing data and corresponding labels.
-    k_guess : int, optional
-        The guessed value for k (default is 3).
+    k_guess : int
+        The guessed value for k (default is 5).
 
     Returns: None- Prints out the resulting accuracy.
     """
@@ -317,13 +317,13 @@ def main():
 
 
     # Step 8: Run guessed k-NN
-    guessed_k = 3
+    guessed_k = 5
     print(f"\n[STEP 8] Running guessed k-NN with k={guessed_k}")
     knn_guess = KNeighborsClassifier(n_neighbors=guessed_k)
     knn_guess.fit(X_train_sk, y_train_sk)
     preds_guess = knn_guess.predict(X_test_sk)
 
-    print("[COMPARE LABELS] Guessed k-NN (k=3):")
+    print("[COMPARE LABELS] Guessed k-NN (k=5):")
     compareLabels(preds_guess, y_test_sk)
 
     # Step 9: Find best k
