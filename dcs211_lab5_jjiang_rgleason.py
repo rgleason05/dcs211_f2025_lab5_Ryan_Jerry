@@ -304,7 +304,7 @@ def main():
     print("\n[INFO] Starting scikit-learn-assisted tests...")
 
     # Step 7: Split data
-    X_test, y_test, X_train, y_train = splitData(data_array)
+    X_test, y_test, X_train, y_train = splitData(A)
 
 
     # Step 8: Run guessed k-NN
