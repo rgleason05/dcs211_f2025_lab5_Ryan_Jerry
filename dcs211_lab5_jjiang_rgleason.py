@@ -172,16 +172,15 @@ def compareLabels(predicted_labels: np.ndarray, actual_labels: np.ndarray) -> in
     print(f"Correct: {num_correct} out of {num_labels}")
     return num_correct
 
-from sklearn.metrics import accuracy_score
-import random
+from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.model_selection import cross_val_score
 
-def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 20) -> int:
+def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 64) -> dict:
     """
-    Determines the best k value for a k-NN classifier by evaluating
-    accuracy across a range of k values.
+    Determines the best k value for a k-NN classifier using cross-validation
+    for multiple seeds.
 
     Parameters:
-
     X_train : np.ndarray
         Training feature data.
     y_train : np.ndarray
@@ -189,34 +188,31 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 20) -> int:
     max_k : int, optional
         The maximum k value to test (default is 20).
 
-    Returns: int - The value of k that achieved the highest accuracy.
+    Returns: dict
+        Dictionary mapping each seed to the best k value found.
     """
-    seeds = [8675309, 5551212, 12345]  # three seeds
-    best_k = 1
-    best_acc = 0.0
 
-    for k in range(1, max_k + 1):
-        avg_acc = 0.0
-        for seed in seeds:
-            np.random.seed(seed)
-            X_subtrain, X_val, y_subtrain, y_val = train_test_split(
-                X_train, y_train, test_size=0.2, random_state=seed
-            )
+    seeds = [8675309, 5551212, 123456]
+    best_k_per_seed = {}
+
+    for seed in seeds:
+        np.random.seed(seed)
+        best_k = 1
+        best_acc = 0.0
+
+        for k in range(1, max_k + 1):
             knn = KNeighborsClassifier(n_neighbors=k)
-            knn.fit(X_subtrain, y_subtrain)
-            acc = knn.score(X_val, y_val)
-            avg_acc += acc
-        avg_acc /= len(seeds)
+            cv_scores = cross_val_score(knn, X_train, y_train, cv=5)
+            acc = cv_scores.mean()
 
-        if avg_acc > best_acc:
-            best_acc = avg_acc
-            best_k = k
+            if acc > best_acc:
+                best_acc = acc
+                best_k = k
 
-    print(f"Best k = {best_k} with average validation accuracy = {best_acc:.4f}")
-    return best_k
+        best_k_per_seed[seed] = best_k
+        print(f"Seed {seed}: Best k = {best_k} with CV accuracy = {best_acc:.4f}")
 
-# Determine best k
-best_k = findBestK(X_train_sk, y_train_sk)
+    return best_k_per_seed
 
 def trainAndTest( X_train: np.ndarray,  y_train: np.ndarray,X_test: np.ndarray,y_test: np.ndarray, best_k: int) -> np.ndarray:
     """
@@ -322,9 +318,14 @@ def main():
 
     # Step 9: Find best k
     print("\n[STEP 9] Determining best k...")
-    best_k = findBestK(X_train_sk, y_train_sk)
-    print(f"Best determined k = {best_k}")
+    best_k_per_seed = findBestK(X_train, y_train, max_k=64)
+ 
+    print("\nSummary of best k per seed:")
+    for seed, k in best_k_per_seed.items():
+    print(f"Seed {seed}: Best k = {k}")
 
+    final_k = max(set(best_k_per_seed.values()), key=list(best_k_per_seed.values()).count)
+    print("Final chosen k for your model:", final_k)
     # Step 10: Train and test using best k
     print("\n[STEP 10] Training and testing with best k...")
     final_preds = trainAndTest(X_train_sk, y_train_sk, X_test_sk, y_test_sk, best_k)
