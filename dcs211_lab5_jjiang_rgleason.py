@@ -107,7 +107,7 @@ def splitData(A: np.ndarray) -> List[np.ndarray]:
     y = A[:, -1]    # label column
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size = 0.2, random_state = 42
+        X, y, test_size = 0.2, random_state =42
     )
 
     return [X_test, y_test, X_train, y_train]
@@ -191,28 +191,32 @@ def findBestK(X_train: np.ndarray, y_train: np.ndarray, max_k: int = 20) -> int:
 
     Returns: int - The value of k that achieved the highest accuracy.
     """
+    seeds = [8675309, 5551212, 12345]  # three seeds
     best_k = 1
     best_acc = 0.0
 
     for k in range(1, max_k + 1):
-        knn = KNeighborsClassifier(n_neighbors=k)
-        knn.fit(X_train, y_train)
-        acc = knn.score(X_train, y_train)
-        if acc > best_acc:
-            best_acc = acc
+        avg_acc = 0.0
+        for seed in seeds:
+            np.random.seed(seed)
+            X_subtrain, X_val, y_subtrain, y_val = train_test_split(
+                X_train, y_train, test_size=0.2, random_state=seed
+            )
+            knn = KNeighborsClassifier(n_neighbors=k)
+            knn.fit(X_subtrain, y_subtrain)
+            acc = knn.score(X_val, y_val)
+            avg_acc += acc
+        avg_acc /= len(seeds)
+
+        if avg_acc > best_acc:
+            best_acc = avg_acc
             best_k = k
 
+    print(f"Best k = {best_k} with average validation accuracy = {best_acc:.4f}")
     return best_k
 
-seeds = [8675309, 5551212, 12345]
-
-for seed in seeds:
-    np.random.seed(seed)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=seed
-    )
-    best_k = findBestK(X_train, y_train)
-    print(f"Best k for seed {seed}: {best_k}")
+# Determine best k
+best_k = findBestK(X_train_sk, y_train_sk)
 
 def trainAndTest( X_train: np.ndarray,  y_train: np.ndarray,X_test: np.ndarray,y_test: np.ndarray, best_k: int) -> np.ndarray:
     """
